@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Dactylo Pro Final</title>
+    <link href="https://fonts.googleapis.com/css2?family=Courier+Prime&family=Almarai:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Fix hauteur et position pour éviter les décalages */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #121212;
+            color: #d4d4d4;
+            font-family: 'Courier Prime', monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: cover;
+            position: relative;
+        }
+        #bg-element {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 0;
+            transition: transform 10s ease-in-out;
+            animation: slowZoom 20s infinite alternate;
+        }
+        @keyframes slowZoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.08); }
+        }
+        
+        /* Overlay de grain cinétique + vignette */
+        #bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.4) 90%);
+            pointer-events: none;
+            z-index: 1;
+        }
+        #bg-overlay::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJmIj48ZmVUdXJidWxlbmNlIHR5cGU9ImZyYWN0YWxOb2lzZSIgYmFzZUZyZXF1ZW5jeT0iLjciIG51bU9jdGF2ZXM9IjMiLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWx0ZXI9InVybCgjZikiIG9wYWNpdHk9IjAuMTUiLz48L3N2Zz4=');
+            background-repeat: repeat;
+            opacity: 0.25;
+            pointer-events: none;
+            animation: grain 8s steps(10) infinite;
+        }
+        @keyframes grain {
+            0% { transform: translate(0, 0); }
+            10% { transform: translate(-2%, -1%); }
+            20% { transform: translate(1%, -2%); }
+            30% { transform: translate(2%, 1%); }
+            40% { transform: translate(-1%, 2%); }
+            50% { transform: translate(-2%, -2%); }
+            60% { transform: translate(1%, 1%); }
+            70% { transform: translate(2%, -1%); }
+            80% { transform: translate(-1%, 1%); }
+            90% { transform: translate(1%, -1%); }
+            100% { transform: translate(0, 0); }
+        }
+        
+        /* Interface : zone de texte en bas (1/5 de hauteur) */
+        #interface {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 20px 20px 20px;
+            box-sizing: border-box;
+            height: 100%;
+        }
+        
+        /* Conteneur pour les contrôles (au-dessus) */
+        .controls-wrapper {
+            width: 100%;
+            flex-shrink: 0;
+        }
+        
+        /* Zone de texte : exactement 20vh de haut, positionnée en bas (grâce à margin-top: auto) */
+        textarea {
+            width: 100%;
+            height: 20vh;               /* 1/5 de l'écran */
+            background: #1e1e1e;
+            color: #fff;
+            border: 1px solid #333;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: inherit;
+            resize: none;
+            box-sizing: border-box;
+            font-size: 16px;
+            margin-top: auto;           /* pousse la zone de texte vers le bas */
+            overflow-x: hidden;         /* supprime la barre latérale horizontale */
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+        /* Pour les navigateurs WebKit, on cache la barre horizontale */
+        textarea::-webkit-scrollbar {
+            width: 6px;
+            height: 0px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #333;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+        
+        .speed-control {
+            margin-top: 20px;
+            color: #888;
+            font-size: 14px;
+        }
+        input[type=range] {
+            width: 100%;
+            margin-top: 15px;
+            accent-color: #007bff;
+        }
+        select {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background: #1e1e1e;
+            color: #fff;
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            padding: 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            flex: 1;
+            min-width: 120px;
+            transition: transform 0.1s ease;
+        }
+        button:active {
+            transform: scale(0.97);
+        }
+        #bgBtn, #sigBtn, #fontBtn {
+            background: #444;
+        }
+        
+        /* Adaptation mobile : boutons en colonne */
+        @media (max-width: 600px) {
+            .btn-group {
+                flex-direction: column;
+                gap: 12px;
+            }
+            button {
+                width: 100%;
+                padding: 18px;
+            }
+            #interface {
+                padding: 16px;
+            }
+        }
+        
+        /* Conteneur d'affichage avec animations de fondu - centré en plein écran */
+        #display-container {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 40vh;
+            transform: translateY(-50%);
+            z-index: 3;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out;
+            mask: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            -webkit-mask: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+        }
+        
+        /* Ruban flouté */
+        .text-ribbon {
+            position: absolute;
+            top: -10%;
+            left: 0;
+            width: 100%;
+            height: 120%;
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(14px);
+            pointer-events: none;
+            z-index: 1;
+            border-radius: 0;
+        }
+        
+        #text-content {
+            position: relative;
+            width: 85%;
+            margin: 0 auto;
+            top: 50%;
+            transform: translateY(-50%);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 18px;
+            line-height: 1.6;
+            color: #ffffff;
+            text-shadow: 2px 0 0 #000, -2px 0 0 #000, 0 2px 0 #000, 0 -2px 0 #000, 1px 1px #000, -1px -1px #000, 1px -1px #000, -1px 1px #000;
+            text-align: center;
+            text-align-last: center;
+            padding: 20px;
+            box-sizing: border-box;
+            z-index: 2;
+            max-height: 100%;
+            overflow-y: auto;
+        }
+        
+        footer {
+            text-align: center;
+            font-size: 9px;
+            color: #666;
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding-bottom: 20px;
+            padding-top: 50px;
+            background: linear-gradient(to top, #121212 0%, transparent 100%);
+            pointer-events: none;
+        }
+        footer img {
+            width: 60px;
+            height: auto;
+            opacity: 0.9;
+        }
+        
+        /* Plein écran */
+        :-webkit-full-screen body {
+            height: 100%;
+            overflow: hidden;
+        }
+        :fullscreen body {
+            height: 100%;
+            overflow: hidden;
+        }
+    </style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#4b6cb7">
+<link rel="apple-touch-icon" href="icon.png"></head>
+<body>
+
+<div id="bg-element"></div>
+<div id="bg-overlay"></div>
+
+<div id="interface">
+    <div class="controls-wrapper">
+        <div class="speed-control">
+            Vitesse de défilement :
+            <input type="range" id="speedRange" min="1" max="10" step="1" value="5" oninput="saveOptions()">
+            Taille du texte :
+            <select id="fontSize" onchange="applyStyles(); saveOptions()">
+                <option value="14px">Petit</option>
+                <option value="18px" selected>Moyen</option>
+                <option value="24px">Grand</option>
+                <option value="32px">Très grand</option>
+            </select>
+        </div>
+        <div class="btn-group">
+            <button id="bgBtn">BG MÉDIA</button>
+            <input type="file" id="imageInput" accept="image/*,video/*" style="display:none">
+            
+            <button id="fontBtn">FONT</button>
+            <input type="file" id="fontInput" accept=".ttf,.otf,.woff,.woff2" style="display:none">
+            
+            <button id="sigBtn" onclick="collerSignature()">SIGNATURE</button>
+            <button onclick="lancerAnimation()">LANCER</button>
+        </div>
+    </div>
+    <textarea id="inputText" placeholder="Entrez votre texte..." oninput="saveOptions()"></textarea>
+</div>
+
+<div id="display-container" onclick="location.reload()" oncontextmenu="location.reload(); return false;">
+    <div class="text-ribbon"></div>
+    <div id="text-content"></div>
+</div>
+
+<footer id="signature-footer">
+    <div id="sig-container">
+        <a href="https://ibb.co/svJG1ZQk"><img src="https://i.ibb.co/VWpZCsDr/dfg-1.png" alt="dfg-1" border="0"></a>
+    </div>
+    Made by Laiche Brahim 2026 Paris
+</footer>
+
+<script>
+    // ========== FORCER LE PLEIN ÉCRAN ==========
+    function requestFullscreen() {
+        const docEl = document.documentElement;
+        const req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
+        if (req) req.call(docEl);
+    }
+    
+    function overrideManifest() {
+        const oldLink = document.querySelector('link[rel="manifest"]');
+        if (oldLink) oldLink.remove();
+        
+        const fullscreenManifest = {
+            name: "Dactylo Pro",
+            short_name: "Dactylo",
+            start_url: ".",
+            display: "fullscreen",
+            theme_color: "#121212",
+            background_color: "#121212",
+            icons: []
+        };
+        const existingIcon = document.querySelector('link[rel="apple-touch-icon"]');
+        if (existingIcon && existingIcon.href) {
+            fullscreenManifest.icons.push({
+                src: existingIcon.href,
+                sizes: "512x512",
+                type: "image/png"
+            });
+        } else {
+            fullscreenManifest.icons.push({
+                src: "icon.png",
+                sizes: "512x512",
+                type: "image/png"
+            });
+        }
+        
+        const blob = new Blob([JSON.stringify(fullscreenManifest)], {type: 'application/json'});
+        const url = URL.createObjectURL(blob);
+        const newLink = document.createElement('link');
+        newLink.rel = 'manifest';
+        newLink.href = url;
+        document.head.appendChild(newLink);
+    }
+    
+    window.addEventListener('DOMContentLoaded', () => {
+        overrideManifest();
+        if (window.navigator.standalone === true) {
+            requestFullscreen();
+        }
+    });
+    
+    document.body.addEventListener('touchstart', function firstTouch() {
+        requestFullscreen();
+        document.body.removeEventListener('touchstart', firstTouch);
+    });
+    document.body.addEventListener('click', function firstClick() {
+        requestFullscreen();
+        document.body.removeEventListener('click', firstClick);
+    });
+    
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) requestFullscreen();
+    });
+    
+    // ========== BOUTONS UPLOAD (double clic corrigé) ==========
+    function triggerFileInput(inputId) {
+        setTimeout(() => {
+            document.getElementById(inputId).click();
+        }, 10);
+    }
+    
+    window.addEventListener('DOMContentLoaded', () => {
+        const bgBtn = document.getElementById('bgBtn');
+        const fontBtn = document.getElementById('fontBtn');
+        const imageInput = document.getElementById('imageInput');
+        const fontInput = document.getElementById('fontInput');
+        
+        bgBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            triggerFileInput('imageInput');
+        });
+        fontBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            triggerFileInput('fontInput');
+        });
+        
+        imageInput.addEventListener('change', handleBg);
+        fontInput.addEventListener('change', handleFont);
+    });
+    
+    // ========== FONCTIONS EXISTANTES ==========
+    let bgMedia = null;
+    let animationFrameId = null;
+
+    window.onload = () => {
+        document.getElementById('inputText').value = localStorage.getItem('dactyloText') || "";
+        document.getElementById('speedRange').value = localStorage.getItem('dactyloSpeed') || 5;
+        document.getElementById('fontSize').value = localStorage.getItem('dactyloSize') || "18px";
+        if (localStorage.getItem('dactyloSig')) document.getElementById('sig-container').innerHTML = localStorage.getItem('dactyloSig');
+        
+        const savedBg = localStorage.getItem('dactyloBg');
+        if (savedBg) applyBg(savedBg, localStorage.getItem('dactyloBgType'));
+        
+        const savedFont = localStorage.getItem('dactyloFont');
+        if (savedFont) applyFont(savedFont);
+        
+        applyStyles();
+    };
+
+    function saveOptions() {
+        localStorage.setItem('dactyloText', document.getElementById('inputText').value);
+        localStorage.setItem('dactyloSpeed', document.getElementById('speedRange').value);
+        localStorage.setItem('dactyloSize', document.getElementById('fontSize').value);
+    }
+
+    function applyStyles() {
+        document.getElementById('text-content').style.fontSize = document.getElementById('fontSize').value;
+    }
+
+    function handleBg(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            applyBg(reader.result, file.type);
+            localStorage.setItem('dactyloBg', reader.result);
+            localStorage.setItem('dactyloBgType', file.type);
+        };
+        reader.readAsDataURL(file);
+        event.target.value = '';
+    }
+
+    function applyBg(data, type) {
+        const container = document.getElementById('bg-element');
+        container.innerHTML = '';
+        if (type.startsWith('video/')) {
+            const vid = document.createElement('video');
+            vid.src = data;
+            vid.loop = true;
+            vid.muted = true;
+            vid.autoplay = true;
+            vid.style.cssText = "width:100%; height:100%; object-fit:cover;";
+            container.appendChild(vid);
+            bgMedia = vid;
+            document.body.style.backgroundImage = "none";
+            container.style.animation = 'none';
+        } else {
+            document.body.style.backgroundImage = `url(${data})`;
+            document.body.style.backgroundSize = "cover";
+            document.body.style.backgroundRepeat = "no-repeat";
+            document.body.style.backgroundPosition = "center center";
+            document.body.style.backgroundColor = "#121212";
+            bgMedia = null;
+            container.style.animation = 'slowZoom 20s infinite alternate';
+        }
+    }
+
+    function handleFont(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            applyFont(reader.result);
+            localStorage.setItem('dactyloFont', reader.result);
+        };
+        reader.readAsArrayBuffer(file);
+        event.target.value = '';
+    }
+
+    function applyFont(data) {
+        const fontFace = new FontFace('CustomFont', data);
+        fontFace.load().then(f => {
+            document.fonts.add(f);
+            document.getElementById('text-content').style.fontFamily = 'CustomFont';
+        }).catch(e => console.warn("Police non chargée", e));
+    }
+
+    async function collerSignature() {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (text.includes('<img') || text.includes('<a')) {
+                document.getElementById('sig-container').innerHTML = text;
+                localStorage.setItem('dactyloSig', text);
+            }
+        } catch (err) { alert("Accès refusé."); }
+    }
+
+    function lancerAnimation() {
+        const texte = document.getElementById('inputText').value;
+        if (!texte) return;
+
+        document.getElementById('text-content').textContent = texte;
+        if (bgMedia) bgMedia.play();
+        
+        const container = document.getElementById('display-container');
+        const textElem = document.getElementById('text-content');
+        
+        document.getElementById('interface').style.display = 'none';
+        container.style.display = 'block';
+        
+        textElem.style.transform = 'none';
+        textElem.style.top = 'auto';
+        textElem.style.marginTop = '35vh';
+        
+        setTimeout(() => {
+            container.style.opacity = '1';
+        }, 20);
+        
+        let pos = 35;
+        const speed = parseInt(document.getElementById('speedRange').value) * 0.025;
+        
+        function animate() {
+            pos -= speed;
+            textElem.style.marginTop = pos + "vh";
+            
+            const textHeightVh = (textElem.offsetHeight / window.innerHeight) * 100;
+            const isOut = pos <= -textHeightVh;
+            
+            if (!isOut) {
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                if (animationFrameId) cancelAnimationFrame(animationFrameId);
+                container.style.opacity = '0';
+                setTimeout(() => {
+                    location.reload();
+                }, 600);
+            }
+        }
+        
+        animationFrameId = requestAnimationFrame(animate);
+    }
+</script>
+
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));}</script>
+</body>
+</html>
